@@ -7,8 +7,9 @@
 # Run container:
 # >> docker run -it -p 8080:8080 -p 8888:8888 --user root --name test_nginx18 test
 #	nginx-ldap-auth-daemon.py - demon script
-#	nginx-ldap-auth.default - default config
-#	nginx-ldap-auth.logrotate -logrotate config
+#	app - dir test dash script
+#	nginx.conf - test nginx conf file
+#       bash_run_demon+test_dash.sh - start script
 ###############################################################################
 FROM registry.redhat.io/ubi8/nginx-118
 USER root
@@ -18,10 +19,30 @@ WORKDIR /usr/src/app/
 
 # Install required software
 RUN \
-    yum install -y  git openldap-devel python38 python38-devel python38-setuptools python38-pip gcc  && \
-    pip3 install python-ldap
+    yum install -y  gcc openssl-devel bzip2-devel libffi-devel zlib-devel make openldap-devel 
 
-EXPOSE 8888 8080
+# install python 3.7 from sours
+RUN cd /usr/src/app/src && \
+	tar xzf Python-3.7.9.tgz && \
+	cd Python-3.7.9  && \
+	./configure --enable-optimizations && \
+	make altinstall
+
+#install python module
+RUN cd /usr/src/app && \
+	pip3.7 install --upgrade pip && \
+	pip3.7 install --no-cache-dir -r requirements.txt
+
+# change nginx config 
+RUN mv /usr/src/app/nginx.conf /etc/nginx/nginx.conf && \
+	nginx
+
+# script start 
+RUN chmod a+x bash_run_demon+test_dash.sh
 
 
-CMD ["python3", "/usr/src/app/nginx-ldap-auth-daemon.py", "--host", "0.0.0.0", "--port", "8888"]
+EXPOSE 8080
+
+
+CMD ["./bash_run_demon+test_dash.sh"]
+
