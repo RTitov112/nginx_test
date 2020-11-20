@@ -34,15 +34,14 @@ RUN cd /usr/src/app && \
 	pip3.7 install --no-cache-dir -r requirements.txt
 
 # change nginx config 
-RUN mv /usr/src/app/nginx.conf /etc/nginx/nginx.conf && \
-	nginx
+RUN mv /usr/src/app/nginx.conf /etc/nginx/nginx.conf
 
 # script start 
-RUN chmod a+x bash_run_demon+test_dash.sh
+RUN chmod a+x run.sh 
 
 
 EXPOSE 8080
 
 
-CMD ["./bash_run_demon+test_dash.sh"]
+CMD ["./run.sh"]
 
