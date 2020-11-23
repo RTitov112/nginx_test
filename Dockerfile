@@ -19,4 +19,4 @@ RUN mv /usr/src/app/nginx.conf /etc/nginx/nginx.conf
 
 EXPOSE 8080
 
-CMD ["/bin/bash", "nginx"]
+CMD ["nginx", "-g", "daemon off;"]
