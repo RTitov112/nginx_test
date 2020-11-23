@@ -15,7 +15,9 @@ LABEL   maintainer="Test Testovich"
 WORKDIR /usr/src/app/
 USER root
 
-RUN mv /usr/src/app/nginx.conf /etc/nginx/nginx.conf
+RUN mv /usr/src/app/nginx.conf /etc/nginx/nginx.conf && \
+        mkdir -p  /usr/share/nginx/cache/ && \
+        chown -R nginx:nginx  /usr/share/nginx/
 
 EXPOSE 8080
 
