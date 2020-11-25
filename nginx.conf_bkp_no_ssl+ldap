@@ -1,0 +1,60 @@
+worker_processes auto;
+error_log /var/log/nginx/error.log debug;
+pid /run/nginx.pid;
+include /usr/share/nginx/modules/*.conf;
+
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    proxy_cache_path cache/  keys_zone=auth_cache:10m;
+    upstream backend {
+        server host.docker.internal:8000;
+    }
+
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+
+    server {
+        listen 8080;
+ 
+
+       location / {
+            auth_request /auth-proxy;
+            error_page 401 /login;
+            proxy_pass http://backend/;
+            # time answer
+            proxy_connect_timeout 90s;
+            proxy_send_timeout 120s;
+            proxy_read_timeout 120s;
+        }
+
+        location /login {
+            proxy_pass http://backend/login;
+            proxy_set_header X-Target $request_uri;
+        }
+
+        location = /auth-proxy {
+                internal;
+                proxy_pass http://192.168.155.241:8888;
+                proxy_pass_request_body off;
+                proxy_set_header Content-Length "";
+                proxy_cache auth_cache;
+                proxy_cache_valid 200 1m;
+                proxy_cache_key "$http_authorization$cookie_nginxauth";
+                proxy_set_header X-Ldap-URL "ldap://192.168.155.241:389 ";
+#               proxy_set_header X-Ldap-Starttls "true";
+                proxy_set_header X-Ldap-BaseDN "ou=users,dc=example,dc=org";
+                proxy_set_header X-Ldap-BindDN "cn=admin,dc=example,dc=org";
+                proxy_set_header X-Ldap-BindPass "admin";
+#               proxy_set_header X-CookieName "nginxauth";
+#               proxy_set_header Cookie nginxauth=$cookie_nginxauth;
+#               proxy_set_header X-Ldap-Template "(sAMAccountName=%(username)s)";
+                #proxy_set_header X-Ldap-Realm "Restricted";
+}
+    }
+}
